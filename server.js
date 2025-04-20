@@ -39,12 +39,13 @@ app.post("/api/bookings", async (req, res) => {
 });
 
 app.post("/api/foods", async (req, res) => {
+    console.log("Incoming request:", req.body); // Add this
     try {
         const food = new Food(req.body);
         const savedFood = await food.save();
         res.status(201).json({ message: "Food saved", foodId: savedFood._id });
     } catch (error) {
-        console.error(error);
+        console.error("Save Error:", error); // Make sure error is logged
         res.status(500).json({ error: "Failed to save food" });
     }
 });
