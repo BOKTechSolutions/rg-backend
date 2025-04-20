@@ -83,6 +83,27 @@ app.post("/api/expenses", async (req, res) => {
     }
 });
 
+app.get("/api/bookings/search", async (req, res) => {
+    const { clientName, from, to } = req.query;
+
+    const filter = {};
+    if (clientName) {
+        filter.clientName = { $regex: new RegExp(clientName, "i") };
+    }
+    if (from || to) {
+        filter.arrivalDate = {};
+        if (from) filter.arrivalDate.$gte = from;
+        if (to) filter.arrivalDate.$lte = to;
+    }
+
+    try {
+        const results = await Booking.find(filter).sort({ arrivalDate: -1 });
+        res.json(results);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to retrieve bookings." });
+    }
+});
+
 
 
 // ✅ Start server
