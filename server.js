@@ -1,35 +1,101 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const Booking = require("./models/booking");
 const Food = require("./models/food");
 const Drink = require("./models/drink");
 const ShopItem = require("./models/shopItem");
 const Expense = require("./models/expense");
+const User = require("./models/User");  // Import User model
+const authRoutes = require('./routes/authRoutes'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
-
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json());  // To parse JSON bodies
+app.use('/api/auth', authRoutes); 
 
 // ✅ MongoDB Atlas connection
 console.log("Connecting to:", process.env.MONGODB_URI);
 
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI, {})
+    .then(() => console.log("✅ Successfully connected to MongoDB Atlas"))
+    .catch(err => console.error("❌ MongoDB connection error:", err));
 
-})
-.then(() => console.log("✅ Successfully connected to MongoDB Atlas"))
-.catch(err => console.error("❌ MongoDB connection error:", err));
+// ✅ Auth Routes (signup)
+app.post("/api/auth/signup", async (req, res) => {
+    const { email, password } = req.body;
 
-// ✅ Endpoints
-app.post("/api/bookings", async (req, res) => {
+    // Debugging log to check received data
+    console.log("Signup request received with email:", email);
+
+    // Check if email and password are provided
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+    }
+
     try {
-        const booking = new Booking(req.body);
+        // Check if the user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: "User already exists" });
+        }
+
+        // Create a new user
+        const newUser = new User({ email, password });
+
+        // Hash the password before saving it
+        const salt = await bcrypt.genSalt(10);
+        newUser.password = await bcrypt.hash(password, salt);
+
+        // Save the new user
+        await newUser.save();
+        console.log("New user saved:", newUser);
+
+        // Generate a JWT token for the user
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        // Send response with success message and token
+        res.status(201).json({
+            message: "User created successfully!",
+            token: token,
+        });
+    } catch (error) {
+        console.error("Error during signup:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Middleware to authenticate token
+function authenticateToken(req, res, next) {
+    const token = req.header('Authorization')?.replace('Bearer ', '');  // Extract token from Authorization header
+
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized access, no token provided" });
+    }
+
+    try {
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // Attach user data to the request object
+        next(); // Allow the request to proceed
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        return res.status(403).json({ message: "Invalid or expired token" });
+    }
+}
+
+// ✅ Endpoints (Protected with JWT authentication)
+
+// POST - Booking
+app.post("/api/bookings", authenticateToken, async (req, res) => {
+    try {
+        const booking = new Booking({ ...req.body, userId: req.user.userId });  // Add userId to associate the booking with the user
         const savedBooking = await booking.save();
         res.status(201).json({ message: "Booking saved", bookingId: savedBooking._id });
     } catch (error) {
@@ -38,19 +104,20 @@ app.post("/api/bookings", async (req, res) => {
     }
 });
 
-app.post("/api/foods", async (req, res) => {
-    console.log("Incoming request:", req.body); // Add this
+// POST - Food
+app.post("/api/foods", authenticateToken, async (req, res) => {
     try {
         const food = new Food(req.body);
         const savedFood = await food.save();
         res.status(201).json({ message: "Food saved", foodId: savedFood._id });
     } catch (error) {
-        console.error("Save Error:", error); // Make sure error is logged
+        console.error(error);
         res.status(500).json({ error: "Failed to save food" });
     }
 });
 
-app.post("/api/drinks", async (req, res) => {
+// POST - Drink
+app.post("/api/drinks", authenticateToken, async (req, res) => {
     try {
         const drink = new Drink(req.body);
         const savedDrink = await drink.save();
@@ -61,7 +128,8 @@ app.post("/api/drinks", async (req, res) => {
     }
 });
 
-app.post("/api/shop", async (req, res) => {
+// POST - Shop Item
+app.post("/api/shop", authenticateToken, async (req, res) => {
     try {
         const shopItem = new ShopItem(req.body);
         const savedShopItem = await shopItem.save();
@@ -72,7 +140,8 @@ app.post("/api/shop", async (req, res) => {
     }
 });
 
-app.post("/api/expenses", async (req, res) => {
+// POST - Expense
+app.post("/api/expenses", authenticateToken, async (req, res) => {
     try {
         const expense = new Expense(req.body);
         const savedExpense = await expense.save();
@@ -83,22 +152,20 @@ app.post("/api/expenses", async (req, res) => {
     }
 });
 
-app.get("/api/bookings/search", async (req, res) => {
+// GET - Search Bookings by Client Name
+app.get("/api/bookings/search", authenticateToken, async (req, res) => {
     const { clientName } = req.query;
     if (!clientName) return res.status(400).json({ error: "Client name required" });
 
     try {
-        const results = await Booking.find({ clientName: new RegExp(clientName, "i") }); // case-insensitive
+        const results = await Booking.find({ clientName: new RegExp(clientName, "i") });
         res.json(results);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
 });
 
-
-
-
-// ✅ Start server
+// ✅ Start Server
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
 });
