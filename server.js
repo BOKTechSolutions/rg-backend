@@ -11,7 +11,6 @@ const ShopItem = require("./models/shopItem");
 const Expense = require("./models/expense");
 const User = require("./models/User");  // Import User model
 const authRoutes = require('./routes/auth'); 
-const authenticateToken = require('./middleware/auth')
 
 const app = express();
 const PORT = process.env.PORT || 3000;
