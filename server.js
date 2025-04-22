@@ -95,6 +95,7 @@ function authenticateToken(req, res, next) {
 // ✅ Endpoints (Protected with JWT authentication)
 
 // POST - Booking
+const authenticate = require('./middleware/auth');
 app.post("/api/bookings", authenticateToken, async (req, res) => {
     try {
         const booking = new Booking({ ...req.body, userId: req.user.userId });  // Add userId to associate the booking with the user
