@@ -189,6 +189,37 @@ app.get("/api/bookings/search", authenticateToken, async (req, res) => {
     }
 });
 
+
+// Update user info
+app.post('/api/user/profile', async (req, res) => {
+    const { userId, fullName, email, phone, profileImage } = req.body;
+  
+    try {
+      const user = await User.findByIdAndUpdate(userId, {
+        fullName,
+        email,
+        phone,
+        ...(profileImage && { profileImage })
+      }, { new: true });
+  
+      res.json({ success: true, user });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+
+  
+//Fetch user info
+app.get('/api/user/:id', async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id);
+      res.json({ success: true, user });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+  
 // ✅ Start Server
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);

@@ -23,11 +23,21 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: null
     },
+    profileImage: {
+      type: String, // base64 string or a URL to a file
+      default: ''   // optional default image path or empty
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false
+    },
     bookings: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Booking'
     }]
-});
+  });
+
+  
 
 // Pre-save hook to hash the password before saving to DB
 userSchema.pre('save', async function(next) {
