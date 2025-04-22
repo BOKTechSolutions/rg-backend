@@ -29,16 +29,19 @@ mongoose.connect(process.env.MONGODB_URI, {})
     .then(() => console.log("✅ Successfully connected to MongoDB Atlas"))
     .catch(err => console.error("❌ MongoDB connection error:", err));
 
+
+
+
 // ✅ Auth Routes (signup)
 app.post("/api/auth/signup", async (req, res) => {
-    const { email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
     // Debugging log to check received data
     console.log("Signup request received with email:", email);
 
-    // Check if email and password are provided
-    if (!email || !password) {
-        return res.status(400).json({ error: "Email and password are required" });
+    // Check if email, password, and fullName are provided
+    if (!email || !password || !fullName) {
+        return res.status(400).json({ error: "Email, password, and full name are required" });
     }
 
     try {
@@ -48,8 +51,8 @@ app.post("/api/auth/signup", async (req, res) => {
             return res.status(400).json({ error: "User already exists" });
         }
 
-        // Create a new user
-        const newUser = new User({ email, password });
+        // Create a new user with full name, email, and password
+        const newUser = new User({ fullName, email, password });
 
         // Hash the password before saving it
         const salt = await bcrypt.genSalt(10);
@@ -72,6 +75,7 @@ app.post("/api/auth/signup", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 
 // Middleware to authenticate token
 function authenticateToken(req, res, next) {

@@ -5,23 +5,23 @@ const router = express.Router();
 
 // POST - Signup Route
 router.post('/signup', async (req, res) => {
-    const { email, password } = req.body;
-    
+    const { fullName, email, password } = req.body;
+
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });
         }
-        
-        const newUser = new User({ email, password });
+
+        const newUser = new User({ fullName, email, password });
         await newUser.save();
-        
+
         const token = jwt.sign(
             { userId: newUser._id },
             process.env.JWT_SECRET,
-            { expiresIn: '10h' } // You can customize this time
+            { expiresIn: '10h' }
         );
-        
+
         res.status(201).json({
             message: 'User created successfully!',
             token: token,
@@ -31,7 +31,6 @@ router.post('/signup', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
 
 // POST - Login Route
 router.post('/login', async (req, res) => {
@@ -60,7 +59,7 @@ router.post('/login', async (req, res) => {
             user: {
                 email: user.email,
                 _id: user._id,
-                name: user.name || '', // optional
+                fullName: user.fullName
             }
         });
     } catch (error) {
