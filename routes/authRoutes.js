@@ -1,4 +1,4 @@
-// backend/routes/authRoutes.js
+// authRoutes.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -17,7 +17,7 @@ router.post('/signup', async (req, res) => {
         const newUser = new User({ email, password });
         await newUser.save();
 
-        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '10h' });
 
         res.status(201).json({
             message: 'User created successfully!',
@@ -47,12 +47,16 @@ router.post('/login', async (req, res) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '10h' });
 
         // Send response with token
         res.json({
             message: 'Login successful',
             token: token,
+            user: {
+                email: user.email,
+                _id: user._id
+            }
         });
     } catch (error) {
         console.error(error);
