@@ -1,10 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');  // Import User model
-const router = express.Router();
+const router = express.Router();  // Use router, not app
 
 // POST - Signup Route
-app.post('/api/auth/signup', async (req, res) => {
+router.post('/signup', async (req, res) => {
     const { email, password } = req.body;
     
     try {
@@ -23,13 +23,13 @@ app.post('/api/auth/signup', async (req, res) => {
             token: token,
         });
     } catch (error) {
-        console.error(error);
+        console.error("Signup Error:", error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
 // POST - Login Route
-app.post('/api/auth/login', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     
     try {
@@ -48,9 +48,10 @@ app.post('/api/auth/login', async (req, res) => {
         res.json({
             message: 'Login successful',
             token: token,
+            user,
         });
     } catch (error) {
-        console.error(error);
+        console.error("Login Error:", error);
         res.status(500).json({ error: 'Server error' });
     }
 });
