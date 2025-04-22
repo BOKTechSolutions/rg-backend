@@ -11,6 +11,8 @@ const ShopItem = require("./models/shopItem");
 const Expense = require("./models/expense");
 const User = require("./models/User");  // Import User model
 const authRoutes = require('./routes/auth'); 
+const session = require('express-session');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +23,24 @@ app.use(express.json());  // To parse JSON bodies
 
 // ✅ Use auth routes
 app.use('/api/auth', authRoutes); 
+// CORS config: allow credentials and specify your frontend origin
+app.use(cors({
+    origin: 'http://127.0.0.1:3000', // or wherever your frontend is hosted
+    credentials: true
+  }));
+
+// Session config
+app.use(session({
+    secret: process.env.SESSION_SECRET, // keep this secret in production
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // set to true if using HTTPS
+      httpOnly: true,
+      sameSite: 'lax' // or 'none' if using HTTPS and cross-site
+    }
+  }));
+
 
 // ✅ MongoDB Atlas connection
 console.log("Connecting to:", process.env.MONGODB_URI);
@@ -28,6 +48,7 @@ console.log("Connecting to:", process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI, {})
     .then(() => console.log("✅ Successfully connected to MongoDB Atlas"))
     .catch(err => console.error("❌ MongoDB connection error:", err));
+
 
 
 
