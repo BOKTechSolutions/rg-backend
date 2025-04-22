@@ -12,7 +12,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    name: String, // ✅ Optional: Add name or other profile fields
+    phone: String,
+    bookings: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Booking' // ✅ Reference to Booking model
+    }]
 });
+
+
 
 // Pre-save hook to hash the password before saving to DB
 userSchema.pre('save', async function(next) {

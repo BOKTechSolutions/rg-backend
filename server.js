@@ -98,9 +98,26 @@ function authenticateToken(req, res, next) {
 
 app.post("/api/bookings", authenticateToken, async (req, res) => {
     try {
-        const booking = new Booking({ ...req.body, userId: req.user.userId });  // Add userId to associate the booking with the user
+        // Create a new booking and associate it with the user
+        const booking = new Booking({ 
+            ...req.body, 
+            userId: req.user.userId
+        });
+
+        // ✅ Save the booking to the database first
         const savedBooking = await booking.save();
-        res.status(201).json({ message: "Booking saved", bookingId: savedBooking._id });
+
+        // ✅ Now push the booking ID to the user's bookings array
+        await User.findByIdAndUpdate(
+            req.user.userId,
+            { $push: { bookings: savedBooking._id } }
+        );
+
+        // ✅ Send success response with booking ID
+        res.status(201).json({ 
+            message: "Booking saved", 
+            bookingId: savedBooking._id 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to save booking" });

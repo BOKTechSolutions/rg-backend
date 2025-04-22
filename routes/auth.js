@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');  // Import User model
-const router = express.Router();  // Use router, not app
+const router = express.Router();
 
 // POST - Signup Route
 router.post('/signup', async (req, res) => {
@@ -16,17 +16,22 @@ router.post('/signup', async (req, res) => {
         const newUser = new User({ email, password });
         await newUser.save();
         
-        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(
+            { userId: newUser._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '10h' } // You can customize this time
+        );
         
         res.status(201).json({
             message: 'User created successfully!',
             token: token,
         });
     } catch (error) {
-        console.error("Signup Error:", error);
+        console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 // POST - Login Route
 router.post('/login', async (req, res) => {
@@ -43,15 +48,18 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
         
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '10h' } // Set to 10 hours for receptionists
+        );
         
         res.json({
             message: 'Login successful',
             token: token,
-            user,
         });
     } catch (error) {
-        console.error("Login Error:", error);
+        console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 });
