@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
         // Refresh token -long lifespan
                 
         const refreshToken = jwt.sign(
-            { userId: newUser._id },
+            { userId: user._id },
             process.env.REFRESH_SECRET,
             { expiresIn: '7d' }
         );
