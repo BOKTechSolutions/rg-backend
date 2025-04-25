@@ -19,7 +19,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*', // Or set this to your frontend URL for security
+    credentials: true
+  }));
 app.use(express.json());  // To parse JSON bodies
 app.use(cookieParser()); // Important!
 
