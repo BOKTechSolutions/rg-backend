@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const bookingSchema = new mongoose.Schema({
   clientName: String,
   phoneNumber: String,
@@ -12,7 +11,11 @@ const bookingSchema = new mongoose.Schema({
   timeIn: String,
   timeOfDeparture: String,
   departureDate: Date,
-
+  status: {
+    type: String,
+    enum: ['booked', 'available'],
+    default: 'booked'
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -11,6 +11,9 @@ const ShopItem = require("./models/shopItem");
 const Expense = require("./models/expense");
 const User = require("./models/User");  // Import User model
 const authRoutes = require('./routes/auth'); 
+const cookieParser = require('cookie-parser');
+const roomsRoutes = require('./routes/rooms');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,9 +21,11 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());  // To parse JSON bodies
+app.use(cookieParser()); // Important!
 
 // ✅ Use auth routes
-app.use('/api/auth', authRoutes); 
+app.use('/api/auth', authRoutes);
+app.use('/api/rooms', roomsRoutes);
 
 // ✅ MongoDB Atlas connection
 console.log("Connecting to:", process.env.MONGODB_URI);
@@ -190,6 +195,7 @@ app.get("/api/bookings/search", authenticateToken, async (req, res) => {
 });
 
 
+
 // Update user info
 app.post('/api/user/profile', async (req, res) => {
     const { userId, fullName, email, phone, profileImage } = req.body;
@@ -207,6 +213,11 @@ app.post('/api/user/profile', async (req, res) => {
       res.status(500).json({ success: false, message: err.message });
     }
   });
+
+
+
+// Static frontend
+app.use(express.static('public'));
 
 // ✅ Start Server
 app.listen(PORT, () => {
