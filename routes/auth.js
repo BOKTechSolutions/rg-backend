@@ -19,19 +19,19 @@ router.post('/signup', async (req, res) => {
         const token = jwt.sign(
             { userId: newUser._id },
             process.env.JWT_SECRET,
-            { expiresIn: '10h' }
+            { expiresIn: '1y' }
         );
         const refreshToken = jwt.sign(
             { userId: newUser._id },
             process.env.REFRESH_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '1y' }
         );
         // Optional: Save refresh token in DB or secure HTTP-only cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 365 * 24 * 60 * 60 * 1000
         });
         
         
@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: '10h' }
+            { expiresIn: '1y' }
         );
                 
         // Refresh token -long lifespan
@@ -72,14 +72,14 @@ router.post('/login', async (req, res) => {
         const refreshToken = jwt.sign(
             { userId: user._id },
             process.env.REFRESH_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: '1y' }
         );
         // Optional: Save refresh token in DB or as a secure cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 365 * 24 * 60 * 60 * 1000
         });
         
         

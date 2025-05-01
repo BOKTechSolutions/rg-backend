@@ -13,6 +13,8 @@ const User = require("./models/User");  // Import User model
 const authRoutes = require('./routes/auth'); 
 const cookieParser = require('cookie-parser');
 const roomsRoutes = require('./routes/rooms');
+const path = require('path');
+
 
 
 const app = express();
@@ -25,10 +27,13 @@ app.use(cors({
   }));
 app.use(express.json());  // To parse JSON bodies
 app.use(cookieParser()); // Important!
+app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
 // ✅ Use auth routes
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomsRoutes);
+
+
 
 // ✅ MongoDB Atlas connection
 console.log("Connecting to:", process.env.MONGODB_URI);
@@ -197,6 +202,24 @@ app.get("/api/bookings/search", authenticateToken, async (req, res) => {
     }
 });
 
+
+// Fetch bookings for the authenticated user
+app.get("/api/bookings", authenticateToken, async (req, res) => {
+    try {
+        // Find bookings for the user using the userId from the token
+        const bookings = await Booking.find({ userId: req.user.userId });
+
+        if (!bookings.length) {
+            return res.status(404).json({ message: "No bookings found." });
+        }
+
+        // Return the bookings to the front-end
+        res.status(200).json(bookings);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to retrieve bookings." });
+    }
+});
 
 
 // Update user info
