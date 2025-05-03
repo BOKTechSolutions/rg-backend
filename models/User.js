@@ -3,41 +3,58 @@ const bcrypt = require('bcryptjs');
 
 // Define User Schema
 const userSchema = new mongoose.Schema({
-    fullName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true
-    },
-    password: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      default: null
-    },
-    profileImage: {
-      type: String, // base64 string or a URL to a file
-      default: ''   // optional default image path or empty
-    },
-    twoFactorEnabled: {
-      type: Boolean,
-      default: false
-    },
-    bookings: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Booking'
-    }]
-  });
+  fullName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String,
+    default: null
+  },
+  profileImage: {
+    type: String, // base64 string or a URL to a file
+    default: ''   // optional default image path or empty
+  },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  bookings: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking'
+  }],
+  foods: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Food'
+  }],
+  shopItems: [{ // Array to hold references to ShopItem documents
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ShopItem'
+  }],
+  expenses: [{ // Array to hold references to Expense documents
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Expense'
+  }],
+  drinks: [{ // Array to hold references to Drink documents
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Drink'
+  }]
+});
 
-  
+module.exports = mongoose.model('User', userSchema);
+
 
 // Pre-save hook to hash the password before saving to DB
 userSchema.pre('save', async function(next) {
