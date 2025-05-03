@@ -144,8 +144,22 @@ app.post("/api/bookings", authenticateToken, async (req, res) => {
 // POST - Food
 app.post("/api/foods", authenticateToken, async (req, res) => {
     try {
-        const food = new Food(req.body);
+        // Create a new food item and associate it with the user's ID
+        const food = new Food({
+            ...req.body,
+            user: req.user.userId // Associate the food with the logged-in user
+        });
+
+        // Save the food item to the database
         const savedFood = await food.save();
+
+        // Now, push the saved food's ID to the user's 'foods' array
+        await User.findByIdAndUpdate(
+            req.user.userId, 
+            { $push: { foods: savedFood._id } } // Add the food's ID to the user's foods array
+        );
+
+        // Send a success response with the saved food ID
         res.status(201).json({ message: "Food saved", foodId: savedFood._id });
     } catch (error) {
         console.error(error);
@@ -156,8 +170,21 @@ app.post("/api/foods", authenticateToken, async (req, res) => {
 // POST - Drink
 app.post("/api/drinks", authenticateToken, async (req, res) => {
     try {
-        const drink = new Drink(req.body);
+        // Attach userId from authenticated token
+        const drink = new Drink({ 
+            ...req.body, 
+            userId: req.user.userId 
+        });
+
+        // Save the drink
         const savedDrink = await drink.save();
+
+        // Push drink ID to the user's drinks array
+        await User.findByIdAndUpdate(
+            req.user.userId,
+            { $push: { drinks: savedDrink._id } }
+        );
+
         res.status(201).json({ message: "Drink saved", drinkId: savedDrink._id });
     } catch (error) {
         console.error(error);
@@ -168,8 +195,21 @@ app.post("/api/drinks", authenticateToken, async (req, res) => {
 // POST - Shop Item
 app.post("/api/shop", authenticateToken, async (req, res) => {
     try {
-        const shopItem = new ShopItem(req.body);
+        // Create new shop item and associate it with the user
+        const shopItem = new ShopItem({ 
+            ...req.body, 
+            userId: req.user.userId 
+        });
+
+        // Save the item
         const savedShopItem = await shopItem.save();
+
+        // Push the item's ID into the user's `shopItems` array
+        await User.findByIdAndUpdate(
+            req.user.userId,
+            { $push: { shopItems: savedShopItem._id } }
+        );
+
         res.status(201).json({ message: "Shop item saved", shopItemId: savedShopItem._id });
     } catch (error) {
         console.error(error);
@@ -180,14 +220,32 @@ app.post("/api/shop", authenticateToken, async (req, res) => {
 // POST - Expense
 app.post("/api/expenses", authenticateToken, async (req, res) => {
     try {
-        const expense = new Expense(req.body);
+        // Attach userId to the expense
+        const expense = new Expense({
+            ...req.body,
+            userId: req.user.userId
+        });
+
+        // Save the expense
         const savedExpense = await expense.save();
+
+        // Push the expense ID to the user's expenses array
+        await User.findByIdAndUpdate(
+            req.user.userId,
+            { $push: { expenses: savedExpense._id } }
+        );
+
         res.status(201).json({ message: "Expense saved", expenseId: savedExpense._id });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to save expense" });
     }
 });
+
+
+
+
+
 
 // GET - Search Bookings by Client Name
 app.get("/api/bookings/search", authenticateToken, async (req, res) => {
@@ -199,25 +257,6 @@ app.get("/api/bookings/search", authenticateToken, async (req, res) => {
         res.json(results);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
-    }
-});
-
-
-// Fetch bookings for the authenticated user
-app.get("/api/bookings", authenticateToken, async (req, res) => {
-    try {
-        // Find bookings for the user using the userId from the token
-        const bookings = await Booking.find({ userId: req.user.userId });
-
-        if (!bookings.length) {
-            return res.status(404).json({ message: "No bookings found." });
-        }
-
-        // Return the bookings to the front-end
-        res.status(200).json(bookings);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to retrieve bookings." });
     }
 });
 
@@ -240,8 +279,6 @@ app.post('/api/user/profile', async (req, res) => {
     }
   });
 
-
-
 // Static frontend
 app.use(express.static('public'));
 
@@ -249,3 +286,5 @@ app.use(express.static('public'));
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
 });
+
+
