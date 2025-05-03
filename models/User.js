@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema({
   }]
 });
 
-module.exports = mongoose.model('User', userSchema);
+
 
 
 // Pre-save hook to hash the password before saving to DB
