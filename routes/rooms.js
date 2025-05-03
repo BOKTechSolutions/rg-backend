@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const active = require('../models/active');
+const Active = require('../models/active');
 const authenticateToken = require('../middleware/authenticate');
 
 // GET: Fetch all room statuses
@@ -33,21 +33,20 @@ router.post('/update', authenticateToken, async (req, res) => {
 
 
 
-// PUT - Update Room
 router.put('/:roomNumber', async (req, res) => {
-    const { roomNumber } = req.params;
-    const update = req.body;
+  const { roomNumber } = req.params;
+  const update = req.body;
   
-    try {
-      const room = await Active.findOneAndUpdate({ room: roomNumber }, update, { new: true });
-      if (!room) {
-        return res.status(404).json({ error: 'Room not found' });
-      }
-      res.json(room);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to update room' });
+  try {
+    const room = await Active.findOneAndUpdate({ room: roomNumber }, update, { new: true });
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
     }
-  });
-  
+    res.json(room);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update room' });
+  }
+});
+
 module.exports = router;
