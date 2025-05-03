@@ -147,7 +147,7 @@ app.post("/api/foods", authenticateToken, async (req, res) => {
         // Create a new food item and associate it with the user's ID
         const food = new Food({
             ...req.body,
-            user: req.user.userId // Associate the food with the logged-in user
+            userId: req.user.userId // Associate the food with the logged-in user
         });
 
         // Save the food item to the database
