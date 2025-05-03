@@ -7,11 +7,12 @@ const authenticateToken = require('../middleware/authenticate');
 router.get('/status', authenticateToken, async (req, res) => {
   const rooms = await active.find({});
   const simplified = rooms.map(room => ({
+    _id: room._id,
     room: room.roomBooked,
     status: room.status,
     cleaned: room.cleaned,
     ready: room.ready
-  }));
+  }));  
   res.json(simplified);
 });
 
