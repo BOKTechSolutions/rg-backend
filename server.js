@@ -12,7 +12,6 @@ const Expense = require("./models/expense");
 const User = require("./models/User");  // Import User model
 const authRoutes = require('./routes/auth'); 
 const cookieParser = require('cookie-parser');
-const roomsRoutes = require('./routes/rooms');
 const path = require('path');
 
 
@@ -31,7 +30,7 @@ app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
 // ✅ Use auth routes
 app.use('/api/auth', authRoutes);
-app.use('/api/rooms', roomsRoutes);
+
 
 
 
