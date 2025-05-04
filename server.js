@@ -13,6 +13,7 @@ const User = require("./models/User");  // Import User model
 const authRoutes = require('./routes/auth'); 
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const userRoutes = require("./routes/user"); 
 
 
 
@@ -30,7 +31,7 @@ app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
 // ✅ Use auth routes
 app.use('/api/auth', authRoutes);
-
+app.use("/api/user", userRoutes);
 
 
 
@@ -242,10 +243,6 @@ app.post("/api/expenses", authenticateToken, async (req, res) => {
 });
 
 
-
-
-
-
 // GET - Search Bookings by Client Name
 app.get("/api/bookings/search", authenticateToken, async (req, res) => {
     const { clientName } = req.query;
@@ -278,6 +275,20 @@ app.post('/api/user/profile', async (req, res) => {
     }
   });
 
+
+// Example Express route
+app.get("/user/:id", async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+      res.json({ success: true, user });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  });
+  
 // Static frontend
 app.use(express.static('public'));
 
