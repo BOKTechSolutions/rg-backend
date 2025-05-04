@@ -276,19 +276,6 @@ app.post('/api/user/profile', async (req, res) => {
   });
 
 
-// Example Express route
-app.get("/user/:id", async (req, res) => {
-    try {
-      const user = await User.findById(req.params.id);
-      if (!user) {
-        return res.status(404).json({ success: false, message: "User not found" });
-      }
-      res.json({ success: true, user });
-    } catch (err) {
-      res.status(500).json({ success: false, message: "Server error" });
-    }
-  });
-  
 // Static frontend
 app.use(express.static('public'));
 
