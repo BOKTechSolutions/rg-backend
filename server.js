@@ -14,7 +14,7 @@ const authRoutes = require('./routes/auth');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const userRoutes = require("./routes/user");
-import userRoutes from "./routes/userRoutes.js"; // adjust path
+
 
 
 
