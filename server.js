@@ -46,51 +46,6 @@ mongoose.connect(process.env.MONGODB_URI, {})
 
 
 
-// ✅ Auth Routes (signup)
-app.post("/api/auth/signup", async (req, res) => {
-    const { fullName, email, password } = req.body;
-
-    // Debugging log to check received data
-    console.log("Signup request received with email:", email);
-
-    // Check if email, password, and fullName are provided
-    if (!email || !password || !fullName) {
-        return res.status(400).json({ error: "Email, password, and full name are required" });
-    }
-
-    try {
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: "User already exists" });
-        }
-
-        // Create a new user with full name, email, and password
-        const newUser = new User({ fullName, email, password });
-
-        // Hash the password before saving it
-        const salt = await bcrypt.genSalt(10);
-        newUser.password = await bcrypt.hash(password, salt);
-
-        // Save the new user
-        await newUser.save();
-        console.log("New user saved:", newUser);
-
-        // Generate a JWT token for the user
-        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        // Send response with success message and token
-        res.status(201).json({
-            message: "User created successfully!",
-            token: token,
-        });
-    } catch (error) {
-        console.error("Error during signup:", error);
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
-
 // Middleware to authenticate token
 function authenticateToken(req, res, next) {
     const token = req.header('Authorization')?.replace('Bearer ', '');  // Extract token from Authorization header
