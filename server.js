@@ -24,12 +24,13 @@ const PORT = process.env.PORT || 3000;
 // -------------------------
 
 
+const cors = require("cors");
+
 app.use(cors({
-  origin: ['https://royalsys.netlify.app'], // your Netlify frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // only if sending cookies or auth headers
+  origin: "https://royalsys.netlify.app", // allow your frontend
+  credentials: true // if you want to send cookies or auth headers
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 app.use("/admin", express.static(path.join(__dirname, "../admin")));
