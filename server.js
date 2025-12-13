@@ -2,75 +2,85 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const path = require("path"); // <-- add this
 const cookieParser = require("cookie-parser");
-const Booking = require("./models/booking");
-const Food = require("./models/food");
-const Drink = require("./models/drink");
-const ShopItem = require("./models/shopItem");
-const Expense = require("./models/expense");
-const User = require("./models/User");
+const path = require("path");
+
+// Routes
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
-const admin = require("./firebase"); // ✅ correct
+
+// Models (optional for protected routes)
+const Booking = require("./models/Booking");
+const Food = require("./models/Food");
+const Drink = require("./models/Drink");
+const ShopItem = require("./models/ShopItem");
+const Expense = require("./models/Expense");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
+// -------------------------
 // Middleware
+// -------------------------
+
+
 app.use(cors({
-  origin: "https://royalsys.netlify.app",// your frontend
-  credentials: true
-}))
+  origin: ['https://royalsys.netlify.app'], // your Netlify frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // only if sending cookies or auth headers
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/admin", express.static(path.join(__dirname, "../admin")));
 
+// -------------------------
 // Routes
+// -------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
 // -------------------------
-// 🔹 Firebase Token Middleware
+// MongoDB Atlas Connection
 // -------------------------
-const authenticateFirebaseToken = async (req, res, next) => {
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
+
+// -------------------------
+// JWT Middleware
+// -------------------------
+const jwt = require("jsonwebtoken");
+const User = require("./models/User");
+
+const authenticateJWT = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token provided" });
+      return res.status(401).json({ error: "No token provided" });
     }
 
-    const idToken = authHeader.split(" ")[1];
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.firebaseUid = decodedToken.uid;
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Attach userId from MongoDB using firebaseUid
-    const user = await User.findOne({ firebaseUid: decodedToken.uid });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    req.userId = user._id; // For endpoints
+    req.userId = user._id;
+    req.isAdmin = user.isAdmin || false;
     next();
-  } catch (error) {
-    console.error("Firebase token error:", error);
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (err) {
+    console.error("JWT auth error:", err);
+    res.status(401).json({ error: "Invalid or expired token" });
   }
 };
 
 // -------------------------
-// 🔹 MongoDB Atlas connection
-// -------------------------
-mongoose
-  .connect(process.env.MONGODB_URI, {})
-  .then(() => console.log("✅ Connected to MongoDB Atlas"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// -------------------------
-// 🔹 Protected Endpoints
+// Protected Routes Example
 // -------------------------
 
 // POST - Booking
-app.post("/api/bookings", authenticateFirebaseToken, async (req, res) => {
+app.post("/api/bookings", authenticateJWT, async (req, res) => {
   try {
     const booking = new Booking({ ...req.body, userId: req.userId });
     const savedBooking = await booking.save();
@@ -83,7 +93,7 @@ app.post("/api/bookings", authenticateFirebaseToken, async (req, res) => {
 });
 
 // POST - Food
-app.post("/api/foods", authenticateFirebaseToken, async (req, res) => {
+app.post("/api/foods", authenticateJWT, async (req, res) => {
   try {
     const food = new Food({ ...req.body, userId: req.userId });
     const savedFood = await food.save();
@@ -96,7 +106,7 @@ app.post("/api/foods", authenticateFirebaseToken, async (req, res) => {
 });
 
 // POST - Drink
-app.post("/api/drinks", authenticateFirebaseToken, async (req, res) => {
+app.post("/api/drinks", authenticateJWT, async (req, res) => {
   try {
     const drink = new Drink({ ...req.body, userId: req.userId });
     const savedDrink = await drink.save();
@@ -109,7 +119,7 @@ app.post("/api/drinks", authenticateFirebaseToken, async (req, res) => {
 });
 
 // POST - Shop Item
-app.post("/api/shop", authenticateFirebaseToken, async (req, res) => {
+app.post("/api/shop", authenticateJWT, async (req, res) => {
   try {
     const shopItem = new ShopItem({ ...req.body, userId: req.userId });
     const savedShopItem = await shopItem.save();
@@ -122,7 +132,7 @@ app.post("/api/shop", authenticateFirebaseToken, async (req, res) => {
 });
 
 // POST - Expense
-app.post("/api/expenses", authenticateFirebaseToken, async (req, res) => {
+app.post("/api/expenses", authenticateJWT, async (req, res) => {
   try {
     const expense = new Expense({ ...req.body, userId: req.userId });
     const savedExpense = await expense.save();
@@ -135,7 +145,7 @@ app.post("/api/expenses", authenticateFirebaseToken, async (req, res) => {
 });
 
 // GET - Search Bookings
-app.get("/api/bookings/search", authenticateFirebaseToken, async (req, res) => {
+app.get("/api/bookings/search", authenticateJWT, async (req, res) => {
   const { clientName } = req.query;
   if (!clientName) return res.status(400).json({ error: "Client name required" });
 
@@ -147,23 +157,9 @@ app.get("/api/bookings/search", authenticateFirebaseToken, async (req, res) => {
   }
 });
 
-// Update user profile
-app.post("/api/user/profile", authenticateFirebaseToken, async (req, res) => {
-  const { fullName, email, phone, profileImage } = req.body;
-
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.userId,
-      { fullName, email, phone, ...(profileImage && { profileImage }) },
-      { new: true }
-    );
-    res.json({ success: true, user: updatedUser });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
+// -------------------------
 // Serve static frontend
+// -------------------------
 app.use(express.static("public"));
 
 // Start server

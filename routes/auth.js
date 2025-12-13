@@ -1,10 +1,7 @@
-
-// backend/routes/auth.js
-
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const admin = require("../firebase"); // single initialized Firebase Admin instance
 const router = express.Router();
 
 /**
@@ -25,28 +22,24 @@ const generateToken = (user) => {
 };
 
 /* ============================================================
-   🟢 SIGNUP (Backend creates Firebase user + MongoDB entry)
+   🟢 SIGNUP (MongoDB + hashed password)
 ============================================================ */
 router.post("/signup", async (req, res) => {
-  const { fullName, email, password } = req.body; // backend handles password
+  const { fullName, email, password } = req.body;
 
   try {
-    // 1️⃣ Check if user already exists in MongoDB
+    // 1️⃣ Check if user already exists
     const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ error: "User already exists" });
+    if (existingUser) return res.status(400).json({ error: "User already exists" });
 
-    // 2️⃣ Create user in Firebase
-    const firebaseUser = await admin.auth().createUser({
-      email,
-      password,
-    });
+    // 2️⃣ Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // 3️⃣ Create MongoDB user
     const newUser = new User({
       fullName,
       email,
-      firebaseUid: firebaseUser.uid,
+      password: hashedPassword,
       role: "staff", // default role
     });
     await newUser.save();
@@ -71,39 +64,31 @@ router.post("/signup", async (req, res) => {
 });
 
 /* ============================================================
-   🔵 LOGIN (Frontend sends Firebase token → Backend verifies → MongoDB)
+   🔵 LOGIN (MongoDB + password check)
 ============================================================ */
-router.post("/firebase-login", async (req, res) => {
-  const { token, isAdmin } = req.body;
+router.post("/login", async (req, res) => {
+  const { email, password, isAdmin } = req.body;
 
   try {
-    // 1️⃣ Verify Firebase token
-    const decoded = await admin.auth().verifyIdToken(token);
+    // 1️⃣ Find user
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
-    if (!decoded || !decoded.uid) {
-      return res.status(401).json({ error: "Invalid Firebase token" });
-    }
-
-    // 2️⃣ Find MongoDB user via Firebase UID
-    const user = await User.findOne({ firebaseUid: decoded.uid });
-
-    if (!user) {
-      return res.status(404).json({
-        error: "User exists in Firebase but not registered in MongoDB",
-      });
-    }
+    // 2️⃣ Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
     // 3️⃣ Optional admin check
     if (isAdmin && user.role !== "admin") {
       return res.status(403).json({ error: "Not authorized as admin" });
     }
 
-    // 4️⃣ Generate JWT token for dashboard
-    const customToken = generateToken(user);
+    // 4️⃣ Generate JWT token
+    const token = generateToken(user);
 
     res.json({
       message: "Login successful",
-      token: customToken,
+      token,
       user: {
         _id: user._id,
         fullName: user.fullName,
@@ -112,8 +97,8 @@ router.post("/firebase-login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Firebase login error:", error);
-    res.status(500).json({ error: "Server error verifying Firebase token" });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

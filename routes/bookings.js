@@ -1,20 +1,32 @@
 // routes/bookings.js or similar
-
 const express = require('express');
 const router = express.Router();
-const Booking = require('../models/booking'); // Adjust path as needed
-const authenticate = require('../middleware/authenticateToken'); // Your auth middleware
+const Booking = require('../models/Booking'); // Make sure the model name matches
+const authenticateJWT = require('../middleware/authenticateJWT'); // JWT middleware
 
 // GET all bookings for authenticated user
-router.get('/', authenticate, async (req, res) => {
-    try {
-        const userId = req.user.id; // Extracted from token by auth middleware
-        const bookings = await Booking.find({ userId });
-        res.status(200).json(bookings);
-    } catch (error) {
-        console.error('Error fetching bookings:', error);
-        res.status(500).json({ error: 'Server error fetching bookings' });
-    }
+router.get('/bookings', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.userId; // Comes from JWT middleware
+    const bookings = await Booking.find({ userId }).sort({ createdAt: -1 });
+    res.status(200).json(bookings);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: 'Server error fetching bookings' });
+  }
+});
+
+// GET a single booking by ID
+router.get('/bookings/:id', authenticateJWT, async (req, res) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, userId: req.userId });
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    res.json(booking);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    res.status(500).json({ error: 'Server error fetching booking' });
+  }
 });
 
 module.exports = router;
+
