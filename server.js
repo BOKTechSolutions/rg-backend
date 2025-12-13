@@ -32,6 +32,11 @@ app.use("/admin", express.static(path.join(__dirname, "../admin")));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
+// 👇 ADD THIS
+app.get("/", (req, res) => {
+  res.status(200).send("✅ RG Backend is running");
+});
+
 // MongoDB Atlas Connection
 // -------------------------
 mongoose.connect(process.env.MONGODB_URI)
@@ -65,6 +70,7 @@ const authenticateJWT = async (req, res, next) => {
     res.status(401).json({ error: "Invalid or expired token" });
   }
 };
+
 
 // -------------------------
 // Protected Routes Example
