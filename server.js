@@ -19,13 +19,6 @@ const Expense = require("./models/Expense");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// -------------------------
-// Middleware
-// -------------------------
-
-
-const cors = require("cors");
-
 app.use(cors({
   origin: "https://royalsys.netlify.app", // allow your frontend
   credentials: true // if you want to send cookies or auth headers
@@ -36,12 +29,9 @@ app.use(cookieParser());
 app.use("/admin", express.static(path.join(__dirname, "../admin")));
 
 // -------------------------
-// Routes
-// -------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
-// -------------------------
 // MongoDB Atlas Connection
 // -------------------------
 mongoose.connect(process.env.MONGODB_URI)
