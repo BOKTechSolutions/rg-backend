@@ -19,9 +19,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: "https://royalsys.netlify.app", // your frontend
+  origin: "https://royalsys.netlify.app",// your frontend
   credentials: true
-}));
+}))
 app.use(express.json());
 app.use(cookieParser());
 app.use("/admin", express.static(path.join(__dirname, "../admin")));
