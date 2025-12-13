@@ -1,7 +1,7 @@
 // routes/bookings.js or similar
 const express = require('express');
 const router = express.Router();
-const Booking = require('../models/Booking'); // Make sure the model name matches
+const Booking = require('../models/booking.js'); // Make sure the model name matches
 const authenticateJWT = require('../middleware/authenticateJWT'); // JWT middleware
 
 // GET all bookings for authenticated user

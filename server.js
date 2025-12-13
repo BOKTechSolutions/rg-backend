@@ -10,11 +10,11 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 
 // Models (optional for protected routes)
-const Booking = require("./models/Booking");
-const Food = require("./models/Food");
-const Drink = require("./models/Drink");
-const ShopItem = require("./models/ShopItem");
-const Expense = require("./models/Expense");
+const Booking = require("./models/booking");
+const Food = require("./models/food");
+const Drink = require("./models/drink");
+const ShopItem = require("./models/shopItem");
+const Expense = require("./models/expense");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
