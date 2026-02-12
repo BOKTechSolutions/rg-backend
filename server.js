@@ -23,6 +23,7 @@ app.use(cors({
   origin: ["https://royalsys.netlify.app", "http://127.0.0.1:5500"], // allow your frontend
   credentials: true // if you want to send cookies or auth headers
 }));
+app.options("*", cors()); // ✅ add this line
 
 app.use(express.json());
 app.use(cookieParser());
