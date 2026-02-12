@@ -39,7 +39,7 @@ router.post("/signup", async (req, res) => {
     const newUser = new User({
       fullName,
       email,
-      password: hashedPassword,
+      password,
       role: "staff", // default role
     });
     await newUser.save();
