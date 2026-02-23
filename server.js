@@ -60,7 +60,7 @@ const authenticateJWT = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
     req.userId = user._id;
@@ -142,18 +142,26 @@ app.post("/api/expenses", authenticateJWT, async (req, res) => {
   }
 });
 
-// GET - Search Bookings
 app.get("/api/bookings/search", authenticateJWT, async (req, res) => {
-  const { clientName } = req.query;
-  if (!clientName) return res.status(400).json({ error: "Client name required" });
+  const { clientName = "" } = req.query;
+
+  if (!clientName.trim()) {
+    return res.status(400).json({ error: "Client name required" });
+  }
 
   try {
-    const results = await Booking.find({ clientName: new RegExp(clientName, "i") });
+    const results = await Booking.find({
+      userId: req.userId, // ✅ important
+      clientName: { $regex: clientName.trim(), $options: "i" },
+    }).sort({ createdAt: -1 });
+
     res.json(results);
   } catch (err) {
+    console.error("Search bookings error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // -------------------------
 // Serve static frontend

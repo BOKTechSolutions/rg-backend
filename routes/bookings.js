@@ -28,5 +28,22 @@ router.get('/bookings/:id', authenticateJWT, async (req, res) => {
   }
 });
 
+router.post("/bookings", authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const booking = await Booking.create({
+      ...req.body,
+      userId,
+    });
+
+    res.status(201).json(booking);
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).json({ error: "Server error creating booking" });
+  }
+});
+
+
 module.exports = router;
 
