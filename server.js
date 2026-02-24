@@ -7,7 +7,7 @@ const path = require("path");
 
 // Routes
 const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/user");
 
 // Models (optional for protected routes)
 const Booking = require("./models/booking");
