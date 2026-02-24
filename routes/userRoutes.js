@@ -43,4 +43,37 @@ router.post("/upload-profile-image", upload.single("profileImage"), async (req, 
   }
 });
 
+// ✅ CHANGE PASSWORD ROUTE
+router.post("/change-password", async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
+    // ✅ This triggers your pre('save') hook to hash automatically
+    user.password = newPassword;
+    await user.save();
+
+    return res.json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 export default router;
